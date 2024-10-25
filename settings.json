@@ -1,0 +1,10 @@
+{
+  "minHDDDistance": 30,
+  "maxHDDDistance": 150,
+  "alpha": 30,
+  "trenchCost": 1,
+  "HDDCost": 10,
+  "trenchHDDCost": 0.5,
+  "maxDistanceFromRoad" : 5.0,
+  "input" : ".\\..\\roads1.geojson"
+}
