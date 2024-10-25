@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(HDD)
+project(Road-power-Grid)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -17,6 +17,6 @@ set(SOURCE_FILES
         main.cpp
         Config.cpp)
 
-add_executable(HDD
+add_executable(Road-power-Grid
         ${SOURCE_FILES})
-target_link_libraries(HDD PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(Road-power-Grid PRIVATE nlohmann_json::nlohmann_json)
