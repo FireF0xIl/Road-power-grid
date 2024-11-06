@@ -19,13 +19,9 @@ int orientation(Point p, Point q, Point r) {
         return 0;
     return (val > 0) ? 1 : 2;
 }
-bool segmentsIntersection(const Segment &s1, const Segment &s2,
-                          Point &intersection) {
-    return segmentsIntersection(s1.p, s1.q, s2.p, s2.q, intersection);
-}
 
-bool segmentsIntersection(const Point &p1, const Point &q1, const Point &p2, const Point &q2,
-                          Point &intersection
+bool segments_intersection(const Point &p1, const Point &q1, const Point &p2, const Point &q2,
+                           Point &intersection
                           ) {
     int o1 = orientation(p1, q1, p2);
     int o2 = orientation(p1, q1, q2);
@@ -75,7 +71,7 @@ double radToDegree(double rad) {
     return rad * (180.0/PI);
 }
 
-double findAlpha(const Point &p1, const Point &p2) {
+double find_alpha(const Point &p1, const Point &p2) {
     double h1 = hypot(p1.x, p1.y);
     double h2 = hypot(p2.x, p2.y);
     double x1 = p1.x / h1;
@@ -90,7 +86,7 @@ double findAlpha(const Point &p1, const Point &p2) {
     return angle;
 }
 
-bool pointInsidePolygon(const Point &point, Polygon polygon) {
+bool point_inside_polygon(const Point &point, Polygon polygon) {
     int num_vertices = polygon.size();
     double x = point.x, y = point.y;
     bool inside = false;
@@ -122,11 +118,11 @@ bool pointInsidePolygon(const Point &point, Polygon polygon) {
     return inside;
 }
 
-void Polygon::addPoint(Point &point) {
+void Polygon::add_point(Point &point) {
     this->Points.emplace_back(point);
 }
 
-void Polygon::addPoint(double first, double second) {
+void Polygon::add_point(double first, double second) {
     this->Points.emplace_back(first, second);
     if (this->Points.size() > 1) {
         Point &p = this->Points[this->Points.size() - 2];
@@ -148,11 +144,11 @@ double dist(double x1, double y1, double x2, double y2) {
     return std::sqrt(std::pow(x1 - x2, 2) + std::pow(y1 - y2, 2));
 }
 
-double degreeToRadian(double degree) {
+double degree_to_radian(double degree) {
     return (degree * (PI / 180));
 }
 
-Point getBetweenPoints(const Point &p1, const Point &p2, double w1, double w2) {
+Point get_between_points(const Point &p1, const Point &p2, double w1, double w2) {
     if (w1 == 0) {
         return p2;
     }
@@ -163,11 +159,11 @@ Point getBetweenPoints(const Point &p1, const Point &p2, double w1, double w2) {
     return {(p1.x * w1 + p2.x * w2) / s, (p1.y * w1 + p2.y * w2) / s};
 }
 
-Point midPoints(const Point &p1, const Point &p2) {
-    return getBetweenPoints(p1, p2, 1.0, 1.0);
+Point mid_points(const Point &p1, const Point &p2) {
+    return get_between_points(p1, p2, 1.0, 1.0);
 }
 
-Point getVector(const Point &p1, const Point &p2) {
+Point get_vector(const Point &p1, const Point &p2) {
     return {p1.x - p2.x, p1.y - p2.y};
 }
 
@@ -175,16 +171,16 @@ Point getPerpendicularVector(const Point &p1, const Point &p2) {
     return {-(p1.y - p2.y), p1.x - p2.x};
 }
 
-int segmentsSplice(const Point &p1, const Point &p2) {
+int segments_splice(const Point &p1, const Point &p2) {
     return ceil(p1.dist(p2) / DENSITY);
 }
 
 
-std::vector<Point> spliceSegment(const Point &p1, const Point &p2) {
+std::vector<Point> splice_segment(const Point &p1, const Point &p2) {
     std::vector<Point> points{ p1 };
-    int s = segmentsSplice(p1, p2);
+    int s = segments_splice(p1, p2);
     for (int i = 1; i <= s; i++) {
-        points.emplace_back(getBetweenPoints(p1, p2, s - i, i));
+        points.emplace_back(get_between_points(p1, p2, s - i, i));
     }
     return points;
 }

@@ -7,7 +7,7 @@
 
 const double PI = 3.141592653589793238463;
 const double EPS = 1E-9;
-const double DENSITY = 25.0;
+const double DENSITY = 30.0;
 
 struct Point {
     double x, y; // координаты точки
@@ -29,13 +29,13 @@ struct Point {
     void print() const;
 };
 
-Point getVector(const Point &p1, const Point &p2);
+Point get_vector(const Point &p1, const Point &p2);
 
 Point getPerpendicularVector(const Point &p1, const Point &p2);
 
-Point getBetweenPoints(const Point &p1, const Point &p2, double w1 = 1, double w2 = 1);
+Point get_between_points(const Point &p1, const Point &p2, double w1 = 1, double w2 = 1);
 
-Point midPoints(const Point &p1, const Point &p2);
+Point mid_points(const Point &p1, const Point &p2);
 
 double dist(double x1, double y1, double x2, double y2);
 
@@ -52,8 +52,8 @@ struct Polygon {
     Polygon(): Points() {}
     Polygon(int _id): id(_id), Points() {}
 
-    void addPoint(Point &point);
-    void addPoint(double first, double second);
+    void add_point(Point &point);
+    void add_point(double first, double second);
 
     void print() const;
 
@@ -97,11 +97,11 @@ struct Rectangle {
             base1(base1), base2(base2), perp1(perp1), perp2(perp2), id1(id1), id2(id2)
     {}
 
-    Point midPoint() const;
+    Point mid_point() const;
 
     Point center() const;
 
-    Point getPerpendicularVector() const;
+    Point get_perpendicular_vector() const;
 
     bool operator <(const Rectangle &other) const {
         return base1 < other.base1 && base2 < other.base2;
@@ -112,20 +112,18 @@ struct Rectangle {
     }
 };
 
-bool segmentsIntersection(const Point &p1, const Point &q1, const Point &p2, const Point &q2,
-                          Point &intersection);
+bool segments_intersection(const Point &p1, const Point &q1, const Point &p2, const Point &q2,
+                           Point &intersection);
 
-bool segmentsIntersection(const Segment &s1, const Segment &s2,
-                          Point &intersection);
 
-bool pointInsidePolygon(const Point &point, Polygon polygon);
+bool point_inside_polygon(const Point &point, Polygon polygon);
 
-double findAlpha(const Point &p1, const Point &p2);
+double find_alpha(const Point &p1, const Point &p2);
 
-double degreeToRadian(double angle);
+double degree_to_radian(double angle);
 
-int segmentsSplice(const Point &p1, const Point &p2);
+int segments_splice(const Point &p1, const Point &p2);
 
-std::vector<Point> spliceSegment(const Point &p1, const Point &p2);
+std::vector<Point> splice_segment(const Point &p1, const Point &p2);
 
 #endif

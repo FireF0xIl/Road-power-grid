@@ -9,8 +9,6 @@
 
 const double MIN_DIST = 10;
 
-struct Edge;
-
 enum V_TYPE {
     TRENCH, HDD, TRENCH_TO_HDD, UNKNOWN
 };
@@ -58,6 +56,9 @@ public:
 
     Edge(EDGE_TYPE e_type, Point x, Point y): o_type(e_type), point1(x), point2(y) {
         cost = calculate_cost();
+        if (point2 < point1) {
+            std::swap(point1, point2);
+        }
     }
 
     bool operator<(const Edge &edge) const {
@@ -74,10 +75,6 @@ public:
         return point1.dist(point2);
     }
 
-    double getCost() const {
-        return cost * getDist();
-    }
-
     EDGE_TYPE type() const {
         return o_type;
     }
@@ -86,16 +83,16 @@ public:
 
 };
 
-struct Fake_Vertex {
-    std::vector<size_t> next;
-    std::vector<size_t> real_next;
+struct FakeVertex {
+    std::set<size_t> next;
+    std::set<size_t> real_next;
     Point point;
     V_TYPE type;
     size_t id;
-    Fake_Vertex(Point &point, V_TYPE type, size_t id) : point(point), type(type), id(id) {}
-    Fake_Vertex(Point &point, V_TYPE type) : point(point), type(type) {}
+    FakeVertex(Point &point, V_TYPE type, size_t id) : point(point), type(type), id(id) {}
+    FakeVertex(Point &point, V_TYPE type) : point(point), type(type) {}
 
-    bool operator<(const Fake_Vertex & p) const {
+    bool operator<(const FakeVertex & p) const {
         if (type == p.type) {
             return point < p.point;
         } else {
@@ -104,12 +101,12 @@ struct Fake_Vertex {
     }
 };
 
-struct Fake_graph {
-    std::map<Fake_Vertex, size_t> search;
-    std::vector<Fake_Vertex> mp;
+struct FakeGraph {
+    std::map<FakeVertex, size_t> search;
+    std::vector<FakeVertex> mp;
 
     size_t get_vertex(Point &point, V_TYPE type) {
-        Fake_Vertex v = Fake_Vertex(point, type);
+        FakeVertex v = FakeVertex(point, type);
         size_t id;
         auto f = search.find(v);
         if (f == search.end()) {
@@ -124,8 +121,8 @@ struct Fake_graph {
     }
 
     void add_edge(size_t id1, size_t id2) {
-        mp[id1].next.emplace_back(id2);
-        mp[id2].next.emplace_back(id1);
+        mp[id1].next.insert(id2);
+        mp[id2].next.insert(id1);
     }
 };
 
@@ -150,13 +147,16 @@ private:
 
     void build_trench();
     void build_hdd();
-    void check_hdd_connections(const Fake_graph &graph);
+    void check_hdd_connections(const FakeGraph &graph);
     bool point_inside_polygons(const Point &p, int polygon_id = -1);
+    bool hdd_roads_intersection(const Point &p1, const Point &p2);
+    bool segment_polygons_intersection(const Point &p1, const Point &p2);
     bool point_inside_polygons(const Point &p, const std::set<int> &polygon_ids = std::set<int>());
     std::vector<Point> get_intersection_points(int polygon_id, Point pt_from, Point pt_to);
     void add_trench_point(int polygon_id, Point &pt_from, const Point &pt_to);
     size_t get_vertex_id(V_TYPE v_type, const Point &e);
     void add_edge(V_TYPE v_type, EDGE_TYPE e_type, Edge &e);
+    void build_additional_trenches(size_t vertex_start);
 };
 
 #endif

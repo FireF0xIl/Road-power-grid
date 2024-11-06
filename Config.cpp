@@ -107,7 +107,7 @@ void Config::read() {
     if (alpha > 90) {
         alpha = 90;
     }
-    alpha = degreeToRadian(alpha);
+    alpha = degree_to_radian(alpha);
     std::cout << "Config: " << min_hdd_distance << " : " << max_hdd_distance << " : " << alpha
         << " : " << trench_cost << " : " << hdd_cost << " : " << trench_hdd_cost << " : " << max_distance_from_road <<'\n';
 }
