@@ -157,6 +157,7 @@ private:
     size_t get_vertex_id(V_TYPE v_type, const Point &e);
     void add_edge(V_TYPE v_type, EDGE_TYPE e_type, Edge &e);
     void build_additional_trenches(size_t vertex_start);
+    bool check_edge_distance(const std::vector<Edge> &polygons_edges, const Point &p1, const Point &p2);
 };
 
 #endif

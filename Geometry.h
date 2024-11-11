@@ -4,10 +4,12 @@
 #include <vector>
 #include <map>
 #include <cmath>
+//#include "Graph.h"
 
 const double PI = 3.141592653589793238463;
 const double EPS = 1E-9;
-const double DENSITY = 30.0;
+//const double DENSITY = 30.0;
+const double DENSITY = 25.0;
 
 struct Point {
     double x, y; // координаты точки
@@ -125,5 +127,11 @@ double degree_to_radian(double angle);
 int segments_splice(const Point &p1, const Point &p2);
 
 std::vector<Point> splice_segment(const Point &p1, const Point &p2);
+
+std::pair<Point, Point> get_close_points(const Point &p1_, const Point &p2_);
+
+std::pair<Point, Point> get_distant_points(const Point &p1_, const Point &p2_);
+
+double get_distance_from_segment(Point target, Point p1, Point p2);
 
 #endif

@@ -184,3 +184,62 @@ std::vector<Point> splice_segment(const Point &p1, const Point &p2) {
     }
     return points;
 }
+
+std::pair<Point, Point> get_close_points(const Point &p1_, const Point &p2_) {
+    double dx = p2_.x - p1_.x;
+    double dy = p2_.y - p1_.y;
+    // norm
+    double base = hypot(dx, dy);
+    dx = dx / base;
+    dy = dy / base;
+    Point p1 = {p1_.x + dx, p1_.y + dy};
+    Point p2 = {p2_.x - dx,  p2_.y - dy};
+    return std::make_pair(p1, p2);
+}
+
+std::pair<Point, Point> get_distant_points(const Point &p1_, const Point &p2_) {
+    double dx = p2_.x - p1_.x;
+    double dy = p2_.y - p1_.y;
+    // norm
+    double base = hypot(dx, dy);
+    dx = dx / base;
+    dy = dy / base;
+    Point p1 = {p1_.x - dx, p1_.y - dy};
+    Point p2 = {p2_.x + dx,  p2_.y + dy};
+    return std::make_pair(p1, p2);
+}
+
+
+//https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+double get_distance_from_segment(Point target, Point p1, Point p2) {
+    double a = target.x - p1.x;
+    double b = target.y - p1.y;
+    double c = p2.x - p1.x;
+    double d = p2.y - p1.y;
+
+    double lenSq = c * c + d * d;
+
+    double param;
+    if (lenSq != 0.0) {
+        auto dot = a * c + b * d;
+        param = dot / lenSq;
+    } else {
+        param = -1.0;
+    }
+    double xx;
+    double yy;
+    if (param < 0) {
+        xx = p1.x;
+        yy = p1.y;
+    } else if (param > 1) {
+        xx = p2.x;
+        yy = p2.y;
+    } else {
+        xx = p1.x + param * c;
+        yy = p1.y + param * d;
+    }
+    double dx = target.x - xx;
+    double dy = target.y - yy;
+    return hypot(dx, dy);
+}
+

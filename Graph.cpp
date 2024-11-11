@@ -7,6 +7,9 @@
 
 static Config config;
 
+std::vector<std::pair<size_t, Point>>
+find_segment_intersects(const std::vector<Edge> &polygons_edges, const Point &p1, const Point &p2);
+
 Graph::Graph() {
     config.read();
 }
@@ -140,8 +143,8 @@ std::pair<Rectangle, Rectangle> build_rectangle(const Point &point1, const Point
     // norm
 
     double base = hypot(dx, dy);
-    dx = dx / base * MIN_DIST;
-    dy = dy / base * MIN_DIST;
+    dx = dx / base * 0.5;
+    dy = dy / base * 0.5;
     Rectangle first = {
             point1,
             point2,
@@ -162,12 +165,11 @@ std::pair<Rectangle, Rectangle> build_rectangle(const Point &point1, const Point
     return std::make_pair(first, second);
 }
 
-void Graph::check_hdd_connections(const FakeGraph &graph) {
-    std::vector<int> visited(graph.mp.size(), -1);
+int choose_sub_graph(const FakeGraph &graph, std::vector<int> &visited) {
     std::map<int, int> col;
     int colour = 0;
     int max = std::numeric_limits<int>::min();
-    int chosen_colour;
+    int chosen_colour = -1;
     for (size_t i = 0; i < graph.mp.size(); i++) {
         if (graph.mp[i].type == HDD && visited[i] == -1) {
             int cur_colour = colour++;
@@ -192,6 +194,12 @@ void Graph::check_hdd_connections(const FakeGraph &graph) {
             col[cur_colour] = count;
         }
     }
+    return chosen_colour;
+}
+
+void Graph::check_hdd_connections(const FakeGraph &graph) {
+    std::vector<int> visited(graph.mp.size(), -1);
+    int chosen_colour = choose_sub_graph(graph, visited);
     std::vector<size_t> hdd;
     for (size_t i = 0; i < visited.size(); i++) {
         if (visited[i] == chosen_colour) {
@@ -308,29 +316,11 @@ void Graph::build_additional_trenches(const size_t vertex_start) {
     }
 }
 
-void write_vertex(FakeGraph &local_graph,
-                  Point &point,
-                  int k1,
-                  int k2,
-                  size_t h_id,
-                  size_t road1,
-                  size_t road2) {
-    if (k1 == 0) {
-        // на дороге
-        if (k2 == 0) {
-            local_graph.mp[h_id].real_next.insert(road1);
-        } else {
-            local_graph.mp[h_id].real_next.insert(road2);
-        }
+void write_vertex(FakeGraph &local_graph, Point &point, int k, size_t h_id, size_t road1, size_t road2) {
+    if (k == 0) {
+        local_graph.mp[h_id].real_next.insert(road1);
     } else {
-        // не на дороге
-        auto t_id = local_graph.get_vertex(point, TRENCH);
-        local_graph.add_edge(t_id, h_id);
-        if (k2 == 0) {
-            local_graph.mp[t_id].real_next.insert(road1);
-        } else {
-            local_graph.mp[t_id].real_next.insert(road2);
-        }
+        local_graph.mp[h_id].real_next.insert(road2);
     }
 }
 
@@ -339,9 +329,7 @@ void add_hdd_edge(FakeGraph &local_graph,
                   Point &p2,
                   const Rectangle &r1,
                   const Rectangle &r2,
-                  int k1,
                   int k2,
-                  int k3,
                   int k4) {
     auto h1_id = local_graph.get_vertex(p1, HDD);
     auto h2_id = local_graph.get_vertex(p2, HDD);
@@ -351,8 +339,8 @@ void add_hdd_edge(FakeGraph &local_graph,
     size_t road2 = r1.id2;
     size_t road3 = r2.id1;
     size_t road4 = r2.id2;
-    write_vertex(local_graph, p1, k1, k2, h1_id, road1, road2);
-    write_vertex(local_graph, p2, k3, k4, h2_id, road3, road4);
+    write_vertex(local_graph, p1, k2, h1_id, road1, road2);
+    write_vertex(local_graph, p2, k4, h2_id, road3, road4);
 }
 
 void Graph::build_hdd() {
@@ -360,6 +348,15 @@ void Graph::build_hdd() {
     std::vector<Rectangle> rectangles_new;
     // считаем, что отступ от дороги достаточно мал, чтобы не попасть на другую дорогу
     std::vector<int> visited(vertex.size(), -1);
+    std::vector<Edge> polygons_edges;
+    for (const auto &pol : polygons) {
+        Point prev = pol.Points[0];
+        for (size_t i = 1; i < pol.Points.size(); i++) {
+            Point cur = pol.Points[i];
+            polygons_edges.emplace_back(Edge(UNKNOWN_EDGE, prev, cur));
+            prev = cur;
+        }
+    }
 
     for (size_t i = 0; i < vertex.size(); i++) {
         if (visited[i] == -1) {
@@ -387,41 +384,74 @@ void Graph::build_hdd() {
     FakeGraph local_graph = FakeGraph();
     for (int i = 0; i < rectangles_new.size(); i++) {
         auto r1 = rectangles_new[i];
-        // не перебирать прямоугольники, а искать пересечение перпендикуляров к дороге
         for (int j = i + 1; j < rectangles_new.size(); j++) {
             auto r2 = rectangles_new[j];
             double rect_dist = r1.center().dist(r2.center());
             if (rect_dist <= config.min_hdd_distance - DENSITY || config.max_hdd_distance + DENSITY <= rect_dist) {
                 continue;
             }
+            Point pp1 = r1.base1;
+            Point pp2 = r1.base2;
             for (int k1 = 0; k1 <= 1; k1++) {
-                Point pp1 = get_between_points(r1.base1, r1.perp1, 1 - k1, k1);
-                Point pp2 = get_between_points(r1.base2, r1.perp2, 1 - k1, k1);
-                // рассматривается только самая дальняя точка
+                Point pp3 = r2.base1;
+                Point pp4 = r2.base2;
                 for (int k2 = 0; k2 <= 1; k2++) {
-                    Point p1 = get_between_points(pp1, pp2, 1 - k2, k2);
-                    for (int k3 = 0; k3 <= 1; k3++) {
-                        Point pp3 = get_between_points(r2.base1, r2.perp1, 1 - k3, k3);
-                        Point pp4 = get_between_points(r2.base2, r2.perp2, 1 - k3, k3);
-                        for (int k4 = 0; k4 <= 1; k4++) {
-                            Point p2 = get_between_points(pp3, pp4, 1 - k4, k4);
-                            double dist = p1.dist(p2);
-                            if (config.min_hdd_distance <= dist && dist <= config.max_hdd_distance) {
-                                Point t;
-                                if (segments_intersection(p1, p2, r1.base1, r1.base2, t)
-                                    && segments_intersection(p1, p2, r2.base1, r2.base2, t)) {
-                                    Point p1p2 = get_vector(p1, p2);
-                                    double alpha1 = find_alpha(p1p2, r1.get_perpendicular_vector());
-                                    double alpha2 = find_alpha(p1p2, r2.get_perpendicular_vector());
-                                    // Построение по дороге ИЛИ посроение вне дорог
-                                    if (alpha1 < config.alpha
-                                        && alpha2 < config.alpha
-                                        && !point_inside_polygons(p1, point_polygon_map[p1])
-                                        && !point_inside_polygons(p2, point_polygon_map[p2])) {
-                                        add_hdd_edge(local_graph, p1, p2, r1, r2, k1, k2, k3, k4);
+                    Point p1 = get_between_points(pp1, pp2, 1 - k1, k1);
+                    Point perp1;
+                    if (k1 == 0) {
+                        perp1 = get_between_points(r1.perp1, r1.perp2, 5, 1);
+                    } else {
+                        perp1 = get_between_points(r1.perp1, r1.perp2, 1, 5);
+                    }
+                    Point perp2;
+                    if (k2 == 0) {
+                        perp2 = get_between_points(r2.perp1, r2.perp2, 5, 1);
+                    } else {
+                        perp2 = get_between_points(r2.perp1, r2.perp2, 1, 5);
+                    }
+                    Point p2 = get_between_points(pp3, pp4, 1 - k2, k2);
+                    double dist = p1.dist(p2);
+                    if (config.min_hdd_distance <= dist && dist <= config.max_hdd_distance) {
+                        Point p1p2 = get_vector(p1, p2);
+                        auto vector = find_segment_intersects(polygons_edges, perp1, perp2);
+                        if (vector.empty()) {
+                            if (check_edge_distance(polygons_edges, p1, p2)) {
+                                add_hdd_edge(local_graph, p1, p2, r1, r2, k1, k2);
+                            }
+                        } else {
+                            if (vector.size() == 1) {
+                                continue;
+                            }
+                            double min_dist = std::numeric_limits<double>::max();
+                            double max_dist = std::numeric_limits<double>::min();
+                            for (const auto &item : vector) {
+                                double cur_dist = item.second.dist(p1);
+                                if (cur_dist < min_dist) {
+                                    min_dist = cur_dist;
+                                }
+                                if (cur_dist > max_dist) {
+                                    max_dist = cur_dist;
+                                }
+                            }
+                            bool p1_angle = false;
+                            bool p2_angle = false;
+                            for (const auto &item : vector) {
+                                double cur_dist = item.second.dist(p1);
+                                if (cur_dist == min_dist) {
+                                    if (find_alpha(p1p2, getPerpendicularVector(polygons_edges[item.first].point1, polygons_edges[item.first].point2)) < config.alpha) {
+                                        p1_angle = true;
                                     }
-                                } else if (!hdd_roads_intersection(p1, p2)) {
-                                    add_hdd_edge(local_graph, p1, p2, r1, r2, k1, k2, k3, k4);
+                                }
+                                if (cur_dist == max_dist) {
+                                    if (find_alpha(p1p2, getPerpendicularVector(polygons_edges[item.first].point1, polygons_edges[item.first].point2)) <
+                                        config.alpha) {
+                                        p2_angle = true;
+                                    }
+                                }
+                            }
+                            if (p1_angle && p2_angle) {
+                                if (check_edge_distance(polygons_edges, p1, p2)) {
+                                    add_hdd_edge(local_graph, p1, p2, r1, r2, k1, k2);
                                 }
                             }
                         }
@@ -432,7 +462,7 @@ void Graph::build_hdd() {
     }
     size_t vertex_size = vertex.size();
     check_hdd_connections(local_graph);
-    build_additional_trenches(vertex_size);
+//    build_additional_trenches(vertex_size);
     std::cout << "HDD build finish" << std::endl;
 }
 
@@ -474,17 +504,6 @@ bool Graph::point_inside_polygons(const Point &p, const std::set<int> &polygon_i
     return false;
 }
 
-std::pair<Point, Point> get_close_points(const Point &p1_, const Point &p2_) {
-    double dx = p2_.x - p1_.x;
-    double dy = p2_.y - p1_.y;
-    // norm
-    double base = hypot(dx, dy);
-    dx = dx / base;
-    dy = dy / base;
-    Point p1 = {p1_.x + dx, p1_.y + dy};
-    Point p2 = {p2_.x - dx,  p2_.y - dy};
-    return std::make_pair(p1, p2);
-}
 
 bool Graph::hdd_roads_intersection(const Point &p1_, const Point &p2_) {
     Point p;
@@ -500,6 +519,18 @@ bool Graph::hdd_roads_intersection(const Point &p1_, const Point &p2_) {
         }
     }
     return false;
+}
+
+std::vector<std::pair<size_t, Point>> find_segment_intersects(const std::vector<Edge> &polygons_edges, const Point &p1, const Point &p2) {
+    Point p;
+    std::vector<std::pair<size_t, Point>> ans;
+    for (size_t i = 0; i < polygons_edges.size(); i++) {
+        Edge edge = polygons_edges[i];
+        if (segments_intersection(p1, p2, edge.point1, edge.point2, p)) {
+            ans.emplace_back(i, p);
+        }
+    }
+    return ans;
 }
 
 bool Graph::segment_polygons_intersection(const Point &p1_, const Point &p2_) {
@@ -564,4 +595,35 @@ double Edge::calculate_cost() const {
         value = config.trench_hdd_cost;
     }
     return value;
+}
+
+bool Graph::check_edge_distance(const std::vector<Edge> &polygons_edges, const Point &p1, const Point &p2) {
+    std::vector<size_t> close_edges;
+    Point mid = mid_points(p1, p2);
+    double dist = p1.dist(p2);
+    double additional_dist = dist * 4.0;
+    for (size_t i = 0; i < polygons_edges.size(); i++) {
+        Edge cur_edge = polygons_edges[i];
+        if (get_distance_from_segment(mid, cur_edge.point1, cur_edge.point2) < additional_dist) {
+            close_edges.emplace_back(i);
+        }
+    }
+    int steps = static_cast<int>(ceil(dist / 10.0));
+    for (int i = 1; i < steps; i++) {
+        bool close = false;
+        Point cur_point = get_between_points(p1, p2, steps - i, i);
+        if (!point_inside_polygons(cur_point, -1)) {
+            for (size_t j : close_edges) {
+                Edge cur_edge = polygons_edges[j];
+                if (get_distance_from_segment(cur_point, cur_edge.point1, cur_edge.point2) < MAX_DISTANCE_FROM_ROAD) {
+                    close = true;
+                    break;
+                }
+            }
+            if (!close) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
