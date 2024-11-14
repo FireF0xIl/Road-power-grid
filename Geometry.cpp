@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cmath>
+#include <numbers>
 
 bool onSegment(Point p, Point q, Point r) {
     if (q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) && q.y <= std::max(p.y, r.y) && q.y >= std::min(p.y, r.y)) {
@@ -63,15 +64,11 @@ double minDistance(const Point &A, const Point &B, const Point &E) {
     return std::abs(x1 * y2 - y1 * x2) / sqrt(x1 * x1 + y1 * y1);
 }
 
-double minDistance(const Segment &segment, const Point &E) {
-    return minDistance(segment.p, segment.q, E);
-}
-
 double radToDegree(double rad) {
-    return rad * (180.0/PI);
+    return rad * (180.0 * std::numbers::inv_pi);
 }
 
-double find_alpha(const Point &p1, const Point &p2) {
+double find_alpha(const Point p1, const Point p2) {
     double h1 = hypot(p1.x, p1.y);
     double h2 = hypot(p2.x, p2.y);
     double x1 = p1.x / h1;
@@ -80,13 +77,13 @@ double find_alpha(const Point &p1, const Point &p2) {
     double y2 = p2.y / h2;
     double angle = std::acos(x1 * x2 + y1 * y2);
 
-    if (angle > PI / 2) {
-        angle = PI - angle;
+    if (angle > std::numbers::pi / 2) {
+        angle = std::numbers::pi - angle;
     }
     return angle;
 }
 
-bool point_inside_polygon(const Point &point, Polygon polygon) {
+bool point_inside_polygon(const Point &point, const Polygon &polygon) {
     int num_vertices = polygon.size();
     double x = point.x, y = point.y;
     bool inside = false;
@@ -118,7 +115,7 @@ bool point_inside_polygon(const Point &point, Polygon polygon) {
     return inside;
 }
 
-void Polygon::add_point(Point &point) {
+void Polygon::add_point(Point point) {
     this->Points.emplace_back(point);
 }
 
@@ -145,7 +142,7 @@ double dist(double x1, double y1, double x2, double y2) {
 }
 
 double degree_to_radian(double degree) {
-    return (degree * (PI / 180));
+    return degree * (std::numbers::pi / 180);
 }
 
 Point get_between_points(const Point &p1, const Point &p2, double w1, double w2) {
@@ -243,3 +240,14 @@ double get_distance_from_segment(Point target, Point p1, Point p2) {
     return hypot(dx, dy);
 }
 
+Point Rectangle::mid_point() const {
+    return mid_points(perp1, perp2);
+}
+
+Point Rectangle::get_perpendicular_vector() const {
+    return get_vector(base1, perp1);
+}
+
+Point Rectangle::center() const {
+    return mid_points(base1, perp2);
+}

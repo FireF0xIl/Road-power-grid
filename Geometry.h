@@ -4,28 +4,31 @@
 #include <vector>
 #include <map>
 #include <cmath>
-//#include "Graph.h"
 
-const double PI = 3.141592653589793238463;
-const double EPS = 1E-9;
-//const double DENSITY = 30.0;
-const double DENSITY = 25.0;
+const constexpr double EPS = 1E-9;
+const constexpr double DENSITY = 25.0;
 
 struct Point {
     double x, y; // координаты точки
     Point() : x(0), y(0) {}
     Point(double x, double y) : x(x), y(y) {}
 
-    bool operator<(const Point & p) const {
-        return (x < p.x-EPS) || ((std::abs(x-p.x) < EPS) && (y < p.y - EPS));
+    auto operator<=>(const Point &p) const {
+        if ((x < p.x - EPS) || ((std::abs(x - p.x) < EPS) && (y < p.y - EPS))) {
+            return std::strong_ordering::less;
+        } else if ((std::abs(x-p.x) < EPS) && (std::abs(y-p.y) < EPS)) {
+            return std::strong_ordering::equivalent;
+        } else {
+            return std::strong_ordering::greater;
+        }
     }
 
     bool operator ==(const Point &p) const {
-        return (std::abs(x-p.x) < EPS) && (std::abs(y-p.y) < EPS);
+        return (*this <=> p) == std::strong_ordering::equivalent;
     }
 
     double dist(const Point &other) const {
-        return std::sqrt(std::pow(x - other.x, 2) + std::pow(y - other.y, 2));
+        return std::hypot(x - other.x, y - other.y);
     }
 
     void print() const;
@@ -35,26 +38,19 @@ Point get_vector(const Point &p1, const Point &p2);
 
 Point getPerpendicularVector(const Point &p1, const Point &p2);
 
-Point get_between_points(const Point &p1, const Point &p2, double w1 = 1, double w2 = 1);
+Point get_between_points(const Point &p1, const Point &p2, double w1 = 1.0, double w2 = 1.0);
 
 Point mid_points(const Point &p1, const Point &p2);
 
 double dist(double x1, double y1, double x2, double y2);
 
-struct Segment {
-    Point p, q;
-    Segment (Point p, Point q) : p(p), q(q) {}
-};
-
 struct Polygon {
     int id;
     std::vector<Point> Points;
-    std::vector<Segment> Segments;
 
-    Polygon(): Points() {}
     Polygon(int _id): id(_id), Points() {}
 
-    void add_point(Point &point);
+    void add_point(Point point);
     void add_point(double first, double second);
 
     void print() const;
@@ -105,22 +101,38 @@ struct Rectangle {
 
     Point get_perpendicular_vector() const;
 
-    bool operator <(const Rectangle &other) const {
-        return base1 < other.base1 && base2 < other.base2;
+//    bool operator <(const Rectangle &other) const {
+//        return base1 < other.base1 && base2 < other.base2;
+//    }
+//    bool operator ==(const Rectangle &other) const {
+//        return (base1 == other.base1 && base2 == other.base2 && perp1 == other.perp1 && perp2 == other.perp2) ||
+//        (base1 == other.base2 && base2 == other.base1 && perp1 == other.perp2 && perp2 == other.perp1);
+//    }
+
+    auto operator<=>(const Rectangle &other) const {
+        if ((base1 == other.base1 && base2 == other.base2 && perp1 == other.perp1 && perp2 == other.perp2) ||
+            (base1 == other.base2 && base2 == other.base1 && perp1 == other.perp2 && perp2 == other.perp1)) {
+            return std::strong_ordering::equivalent;
+        } else if ((base1 < other.base1) && (base2 < other.base2)) {
+            return std::strong_ordering::less;
+        } else {
+            return std::strong_ordering::greater;
+        }
     }
+
     bool operator ==(const Rectangle &other) const {
-        return (base1 == other.base1 && base2 == other.base2 && perp1 == other.perp1 && perp2 == other.perp2) ||
-        (base1 == other.base2 && base2 == other.base1 && perp1 == other.perp2 && perp2 == other.perp1);
+        return (*this <=> other) == std::strong_ordering::equivalent;
     }
+
 };
 
 bool segments_intersection(const Point &p1, const Point &q1, const Point &p2, const Point &q2,
                            Point &intersection);
 
 
-bool point_inside_polygon(const Point &point, Polygon polygon);
+bool point_inside_polygon(const Point &point, const Polygon &polygon);
 
-double find_alpha(const Point &p1, const Point &p2);
+double find_alpha(Point p1, Point p2);
 
 double degree_to_radian(double angle);
 

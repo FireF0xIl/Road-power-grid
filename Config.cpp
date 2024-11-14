@@ -1,8 +1,15 @@
 #include <fstream>
 #include <iostream>
 #include "Config.h"
-#include "Geometry.h"
 
+double Config::min_hdd_distance = MIN_HDD_DISTANCE;
+double Config::max_hdd_distance = MAX_HDD_DISTANCE;
+double Config::max_distance_from_road = MAX_DISTANCE_FROM_ROAD;
+double Config::alpha = ALPHA;
+double Config::hdd_cost = HDD_COST;
+double Config::trench_cost = TRENCH_COST;
+double Config::trench_hdd_cost = TRENCH_HDD_COST;
+std::string Config::input;
 
 void Config::read() {
     std::ifstream ifs(R"(.\..\settings.json)");
@@ -18,20 +25,14 @@ void Config::read() {
 
         if (jfc.contains("minHDDDistance") && (jfc["minHDDDistance"].is_number())) {
             min_hdd_distance = jfc["minHDDDistance"];
-        } else {
-            min_hdd_distance = MIN_HDD_DISTANCE;
         }
 
         if (jfc.contains("maxHDDDistance") && jfc["maxHDDDistance"].is_number()) {
             max_hdd_distance = jfc["maxHDDDistance"];
-        } else {
-            max_hdd_distance = MAX_HDD_DISTANCE;
         }
 
         if (jfc.contains("alpha") && jfc["alpha"].is_number()) {
             alpha = jfc["alpha"];
-        } else {
-            alpha = ALPHA;
         }
 
         if (jfc.contains("trenchCost") && jfc["trenchCost"].is_number()) {
@@ -53,25 +54,12 @@ void Config::read() {
 
         if (jfc.contains("trenchHDDCost") && jfc["trenchHDDCost"].is_number()) {
             trench_hdd_cost = jfc["trenchHDDCost"];
-        } else {
-            trench_hdd_cost = TRENCH_HDD_COST;
         }
 
         if (jfc.contains("maxDistanceFromRoad") && jfc["maxDistanceFromRoad"].is_number()) {
             max_distance_from_road = jfc["maxDistanceFromRoad"];
-        } else {
-            max_distance_from_road = MAX_DISTANCE_FROM_ROAD;
         }
-    } else {
-        min_hdd_distance = MIN_HDD_DISTANCE;
-        max_hdd_distance = MAX_HDD_DISTANCE;
-        alpha = ALPHA;
-        trench_cost = TRENCH_COST;
-        hdd_cost = HDD_COST;
-        trench_hdd_cost = TRENCH_HDD_COST;
-        max_distance_from_road = MAX_DISTANCE_FROM_ROAD;
     }
-
     if (min_hdd_distance < 0.0) {
         min_hdd_distance = 0.0;
     }

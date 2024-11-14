@@ -3,8 +3,9 @@
 
 #include <nlohmann/json.hpp>
 #include <set>
-#include "Geometry.h"
-#include "Graph.h"
+//#include "Geometry.h"
+//#include "Graph.h"
+#include "GraphElement.h"
 
 nlohmann::json GeoJSONReader(const std::string &pass);
 

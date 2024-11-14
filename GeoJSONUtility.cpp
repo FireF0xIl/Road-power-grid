@@ -177,7 +177,7 @@ json geometryFeature(const Vertex &vertex) {
 }
 
 json geometryFeature(const Edge &edge) {
-    if (edge.o_type == TRENCH_TO_HDD_EDGE) {
+    if (edge.o_type == EDGE_TYPE::TRENCH_TO_HDD_EDGE) {
         return pointJson(edge.point1);
     } else {
         return lineJson(edge);
