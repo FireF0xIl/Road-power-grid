@@ -5,7 +5,7 @@ void Map::fill_edges() {
     for (const auto &pol : polygons) {
         Point prev = pol.Points[0];
         for (size_t i = 1; i < pol.Points.size(); i++) {
-            Point cur = pol.Points[i];
+            const Point cur = pol.Points[i];
             polygons_edges.emplace_back(prev, cur);
             prev = cur;
         }
@@ -17,8 +17,8 @@ void Map::load_polygons(GeoJSONHandler &handler) {
     for (const auto &coordinates : handler.get_polygons_coordinates()) {
         Polygon cur(++polygon_id);
         for (auto &p: coordinates[0]) {
-            double x = p[0];
-            double y = p[1];
+            const double x = p[0];
+            const double y = p[1];
             cur.add_point(x, y);
         }
         polygons.emplace_back(cur);
@@ -30,7 +30,7 @@ std::vector<std::pair<size_t, Point>> Map::find_segment_intersects(const Point p
     Point p;
     std::vector<std::pair<size_t, Point>> ans;
     for (size_t i = 0; i < polygons_edges.size(); i++) {
-        PolygonEdge edge = polygons_edges[i];
+        const PolygonEdge edge = polygons_edges[i];
         if (segments_intersection(p1, p2, edge.point1, edge.point2, p)) {
             ans.emplace_back(i, p);
         }
@@ -41,22 +41,22 @@ std::vector<std::pair<size_t, Point>> Map::find_segment_intersects(const Point p
 
 bool Map::check_edge_distance(const Point p1, const Point p2) const {
     std::vector<size_t> close_edges;
-    Point mid = mid_points(p1, p2);
-    double dist = p1.dist(p2);
-    double additional_dist = dist * 4.0;
+    const Point mid = mid_points(p1, p2);
+    const double dist = p1.dist(p2);
+    const double additional_dist = dist * 4.0;
     for (size_t i = 0; i < polygons_edges.size(); i++) {
         PolygonEdge cur_edge = polygons_edges[i];
         if (get_distance_from_segment(mid, cur_edge.point1, cur_edge.point2) < additional_dist) {
             close_edges.emplace_back(i);
         }
     }
-    int steps = static_cast<int>(ceil(dist / 10.0));
+    const int steps = static_cast<int>(ceil(dist / 10.0));
     for (int i = 1; i < steps; i++) {
         bool close = false;
-        Point cur_point = get_between_points(p1, p2, steps - i, i);
+        const Point cur_point = get_between_points(p1, p2, steps - i, i);
         if (!point_inside_polygons(cur_point, -1)) {
             for (size_t j : close_edges) {
-                PolygonEdge cur_edge = polygons_edges[j];
+                const PolygonEdge cur_edge = polygons_edges[j];
                 if (get_distance_from_segment(cur_point, cur_edge.point1, cur_edge.point2) < MAX_DISTANCE_FROM_ROAD) {
                     close = true;
                     break;

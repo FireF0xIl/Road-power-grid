@@ -101,14 +101,6 @@ struct Rectangle {
 
     Point get_perpendicular_vector() const;
 
-//    bool operator <(const Rectangle &other) const {
-//        return base1 < other.base1 && base2 < other.base2;
-//    }
-//    bool operator ==(const Rectangle &other) const {
-//        return (base1 == other.base1 && base2 == other.base2 && perp1 == other.perp1 && perp2 == other.perp2) ||
-//        (base1 == other.base2 && base2 == other.base1 && perp1 == other.perp2 && perp2 == other.perp1);
-//    }
-
     auto operator<=>(const Rectangle &other) const {
         if ((base1 == other.base1 && base2 == other.base2 && perp1 == other.perp1 && perp2 == other.perp2) ||
             (base1 == other.base2 && base2 == other.base1 && perp1 == other.perp2 && perp2 == other.perp1)) {

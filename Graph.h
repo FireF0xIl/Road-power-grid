@@ -31,7 +31,7 @@ struct FakeGraph {
     size_t get_vertex(Point point) {
         FakeVertex v = FakeVertex(point);
         size_t id;
-        auto f = search.find(v);
+        const auto f = search.find(v);
         if (f == search.end()) {
             v.id = mp.size();
             id = v.id;

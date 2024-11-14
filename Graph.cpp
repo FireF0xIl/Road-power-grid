@@ -14,16 +14,16 @@ void Graph::build_trench(const Map &map) {
         Point pt_from = ps.Points[ps.Points.size() - 1];
 
         if (!map.point_inside_polygons(pt_from, ps.id)) {
-            auto result = point.insert(pt_from);
+            const auto result = point.insert(pt_from);
             if (result.second) {
-                point_polygon_map.emplace(pt_from, std::set<int>({ps.id}));
+                point_polygon_map.emplace(pt_from, std::set<int>{ps.id});
             } else {
                 point_polygon_map[pt_from].insert(ps.id);
             }
         }
 
         for (size_t i = 0; i < ps.Points.size(); ++i) {
-            Point pt_to = ps.Points[i];
+            const Point pt_to = ps.Points[i];
             std::vector<Point> pt_intersect = map.get_intersection_points(ps.id, pt_from, pt_to);
             std::sort(pt_intersect.begin(), pt_intersect.end());
             if (!pt_intersect.empty()) {
@@ -54,8 +54,8 @@ void Graph::build_trench(const Map &map) {
 }
 
 void Graph::add_edge(V_TYPE v_type, EDGE_TYPE e_type, Edge &e) {
-    size_t v1_id = get_vertex_id(v_type, e.point1);
-    size_t v2_id = get_vertex_id(v_type, e.point2);
+    const size_t v1_id = get_vertex_id(v_type, e.point1);
+    const size_t v2_id = get_vertex_id(v_type, e.point2);
     vertex[v1_id].graph_edges.emplace_back(e_type, v2_id, e.cost);
     vertex[v2_id].graph_edges.emplace_back(e_type, v1_id, e.cost);
 }
@@ -75,17 +75,17 @@ size_t Graph::get_vertex_id(V_TYPE v_type, const Point &p) {
 
 void Graph::add_trench_point(const Map &map, int polygon_id, Point pt_from, Point pt_to) {
     if (map.point_inside_polygons(mid_points(pt_from, pt_to), polygon_id)) {
-        auto result = point.insert(pt_to);
+        const auto result = point.insert(pt_to);
         if (result.second) {
             point_polygon_map.emplace(pt_to, std::set<int>{polygon_id});
         } else {
             point_polygon_map[pt_to].insert(polygon_id);
         }
     } else {
-        auto pt = splice_segment(pt_from, pt_to);
+        const auto pt = splice_segment(pt_from, pt_to);
         Point pt_cur = pt_from;
         for (size_t i = 1; i < pt.size(); ++i) {
-            auto result = point.insert(pt[i]);
+            const auto result = point.insert(pt[i]);
             if (result.second) {
                 point_polygon_map.emplace(pt[i], std::set<int>{polygon_id});
             } else {
@@ -103,10 +103,10 @@ std::pair<Rectangle, Rectangle> build_rectangle(const Point &point1, const Point
     double dy = point1.y - point2.y;
     // norm
 
-    double base = hypot(dx, dy);
+    const double base = hypot(dx, dy);
     dx = dx / base * 0.5;
     dy = dy / base * 0.5;
-    Rectangle first = {
+    const Rectangle first = {
             point1,
             point2,
             Point(point1.x - dy, point1.y + dx),
@@ -114,7 +114,7 @@ std::pair<Rectangle, Rectangle> build_rectangle(const Point &point1, const Point
             id1,
             id2
     };
-    Rectangle second = {
+    const Rectangle second = {
             point1,
             point2,
             Point(point1.x + dy, point1.y - dx),
@@ -127,7 +127,6 @@ std::pair<Rectangle, Rectangle> build_rectangle(const Point &point1, const Point
 }
 
 int choose_sub_graph(const FakeGraph &graph, std::vector<int> &visited) {
-    std::map<int, int> col;
     int colour = 0;
     int max = std::numeric_limits<int>::min();
     int chosen_colour = -1;
@@ -152,7 +151,6 @@ int choose_sub_graph(const FakeGraph &graph, std::vector<int> &visited) {
                 max = count;
                 chosen_colour = cur_colour;
             }
-            col[cur_colour] = count;
         }
     }
     return chosen_colour;
@@ -160,7 +158,7 @@ int choose_sub_graph(const FakeGraph &graph, std::vector<int> &visited) {
 
 void Graph::check_hdd_connections(const FakeGraph &graph) {
     std::vector<int> visited(graph.mp.size(), -1);
-    int chosen_colour = choose_sub_graph(graph, visited);
+    const int chosen_colour = choose_sub_graph(graph, visited);
     std::vector<size_t> hdd;
     for (size_t i = 0; i < visited.size(); i++) {
         if (visited[i] == chosen_colour) {
@@ -173,24 +171,24 @@ void Graph::check_hdd_connections(const FakeGraph &graph) {
         translation[graph.mp[i].id] = get_vertex_id(V_TYPE::HDD, graph.mp[i].point);
     }
     for (size_t i : hdd) {
-        size_t id = translation[i];
-        auto cur_graph_mp = graph.mp[i];
+        const size_t id = translation[i];
+        const auto cur_graph_mp = graph.mp[i];
         for (auto e : cur_graph_mp.next) {
-            double dist = graph.mp[e].point.dist(cur_graph_mp.point);
-            double cost = dist * Config::hdd_cost;
-            EDGE_TYPE type = EDGE_TYPE::HDD_EDGE;
+            const double dist = graph.mp[e].point.dist(cur_graph_mp.point);
+            const double cost = dist * Config::hdd_cost;
+            const EDGE_TYPE type = EDGE_TYPE::HDD_EDGE;
             vertex[id].graph_edges.emplace_back(type, translation[e], cost);
         }
         for (auto e : cur_graph_mp.real_next) {
-            EDGE_TYPE type = EDGE_TYPE::TRENCH_TO_HDD_EDGE;
-            double cost = Config::trench_hdd_cost;
+            const EDGE_TYPE type = EDGE_TYPE::TRENCH_TO_HDD_EDGE;
+            const double cost = Config::trench_hdd_cost;
             vertex[e].graph_edges.emplace_back(type, id, cost);
             vertex[id].graph_edges.emplace_back(type, e, cost);
         }
     }
 
     for (size_t i = 0; i < vertex.size(); i++) {
-        auto q = vertex[i];
+        const auto q = vertex[i];
         if (vertex[i].o_type == V_TYPE::HDD) {
             for (auto &e : vertex[i].graph_edges) {
                 if (e.vertex_id > i && e.o_type == EDGE_TYPE::HDD_EDGE) {
@@ -201,7 +199,7 @@ void Graph::check_hdd_connections(const FakeGraph &graph) {
     }
 
     for (size_t i = 0; i < vertex.size(); i++) {
-        auto q = vertex[i];
+        const auto q = vertex[i];
         if (vertex[i].o_type == V_TYPE::TRENCH) {
             for (auto &e : vertex[i].graph_edges) {
                 if (e.vertex_id > i && e.o_type == EDGE_TYPE::TRENCH_EDGE) {
@@ -211,7 +209,7 @@ void Graph::check_hdd_connections(const FakeGraph &graph) {
         }
     }
     for (size_t i = 0; i < vertex.size(); i++) {
-        auto q = vertex[i];
+        const auto q = vertex[i];
         if (vertex[i].o_type == V_TYPE::TRENCH || vertex[i].o_type == V_TYPE::HDD) {
             for (auto &e : vertex[i].graph_edges) {
                 if (e.vertex_id > i && e.o_type == EDGE_TYPE::TRENCH_TO_HDD_EDGE) {
@@ -237,14 +235,14 @@ void add_hdd_edge(FakeGraph &local_graph,
                   const Rectangle &r2,
                   int k2,
                   int k4) {
-    auto h1_id = local_graph.get_vertex(p1);
-    auto h2_id = local_graph.get_vertex(p2);
+    const auto h1_id = local_graph.get_vertex(p1);
+    const auto h2_id = local_graph.get_vertex(p2);
     local_graph.add_edge(h1_id, h2_id);
 
-    size_t road1 = r1.id1;
-    size_t road2 = r1.id2;
-    size_t road3 = r2.id1;
-    size_t road4 = r2.id2;
+    const size_t road1 = r1.id1;
+    const size_t road2 = r1.id2;
+    const size_t road3 = r2.id1;
+    const size_t road4 = r2.id2;
     write_vertex(local_graph, p1, k2, h1_id, road1, road2);
     write_vertex(local_graph, p2, k4, h2_id, road3, road4);
 }
@@ -258,7 +256,7 @@ void Graph::build_hdd(const Map &map) {
     for (size_t i = 0; i < vertex.size(); i++) {
         if (visited[i] == -1) {
             visited[i] = 0;
-            Vertex cur = vertex[i];
+            const Vertex cur = vertex[i];
             for (const auto &j : cur.graph_edges) {
                 if (visited[j.vertex_id] == -1) {
                     continue;
@@ -266,7 +264,7 @@ void Graph::build_hdd(const Map &map) {
                 if (cur.position == vertex[j.vertex_id].position) {
                     continue;
                 }
-                auto pair = build_rectangle(cur.position, vertex[j.vertex_id].position, i, j.vertex_id);
+                const auto pair = build_rectangle(cur.position, vertex[j.vertex_id].position, i, j.vertex_id);
                 if (!map.point_inside_polygons(pair.first.mid_point(), -1)) {
                     rectangles.emplace_back(pair.first);
                 }
@@ -279,18 +277,18 @@ void Graph::build_hdd(const Map &map) {
 
     FakeGraph local_graph = FakeGraph();
     for (int i = 0; i < rectangles.size(); i++) {
-        auto r1 = rectangles[i];
+        const Rectangle r1 = rectangles[i];
         for (int j = i + 1; j < rectangles.size(); j++) {
-            auto r2 = rectangles[j];
+            const Rectangle r2 = rectangles[j];
             double rect_dist = r1.center().dist(r2.center());
             if (rect_dist <= Config::min_hdd_distance - DENSITY || Config::max_hdd_distance + DENSITY <= rect_dist) {
                 continue;
             }
-            Point pp1 = r1.base1;
-            Point pp2 = r1.base2;
+            const Point pp1 = r1.base1;
+            const Point pp2 = r1.base2;
             for (int k1 = 0; k1 <= 1; k1++) {
-                Point pp3 = r2.base1;
-                Point pp4 = r2.base2;
+                const Point pp3 = r2.base1;
+                const Point pp4 = r2.base2;
                 for (int k2 = 0; k2 <= 1; k2++) {
                     Point p1 = get_between_points(pp1, pp2, 1 - k1, k1);
                     Point perp1;
@@ -311,8 +309,8 @@ void Graph::build_hdd(const Map &map) {
                     }
                     double dist = p1.dist(p2);
                     if (Config::min_hdd_distance <= dist && dist <= Config::max_hdd_distance) {
-                        Point p1p2 = get_vector(p1, p2);
-                        auto vector = map.find_segment_intersects(perp1, perp2);
+                        const Point p1p2 = get_vector(p1, p2);
+                        const auto vector = map.find_segment_intersects(perp1, perp2);
                         if (vector.empty()) {
                             if (map.check_edge_distance(p1, p2)) {
                                 add_hdd_edge(local_graph, p1, p2, r1, r2, k1, k2);

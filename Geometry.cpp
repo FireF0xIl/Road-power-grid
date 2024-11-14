@@ -24,21 +24,21 @@ int orientation(Point p, Point q, Point r) {
 bool segments_intersection(const Point &p1, const Point &q1, const Point &p2, const Point &q2,
                            Point &intersection
                           ) {
-    int o1 = orientation(p1, q1, p2);
-    int o2 = orientation(p1, q1, q2);
-    int o3 = orientation(p2, q2, p1);
-    int o4 = orientation(p2, q2, q1);
+    const int o1 = orientation(p1, q1, p2);
+    const int o2 = orientation(p1, q1, q2);
+    const int o3 = orientation(p2, q2, p1);
+    const int o4 = orientation(p2, q2, q1);
 
     if (o1 != o2 && o3 != o4) {
-        double a1 = q1.y - p1.y;
-        double b1 = p1.x - q1.x;
-        double c1 = a1 * p1.x + b1 * p1.y;
+        const double a1 = q1.y - p1.y;
+        const double b1 = p1.x - q1.x;
+        const double c1 = a1 * p1.x + b1 * p1.y;
 
-        double a2 = q2.y - p2.y;
-        double b2 = p2.x - q2.x;
-        double c2 = a2 * p2.x + b2 * p2.y;
+        const double a2 = q2.y - p2.y;
+        const double b2 = p2.x - q2.x;
+        const double c2 = a2 * p2.x + b2 * p2.y;
 
-        double determinant = a1 * b2 - a2 * b1;
+        const double determinant = a1 * b2 - a2 * b1;
 
         if (determinant != 0) {
             intersection.x
@@ -57,10 +57,10 @@ bool segments_intersection(const Point &p1, const Point &q1, const Point &p2, co
 }
 
 double minDistance(const Point &A, const Point &B, const Point &E) {
-    double x1 = B.x - A.x;
-    double y1 = B.y - A.y;
-    double x2 = E.x - A.x;
-    double y2 = E.y - A.y;
+    const double x1 = B.x - A.x;
+    const double y1 = B.y - A.y;
+    const double x2 = E.x - A.x;
+    const double y2 = E.y - A.y;
     return std::abs(x1 * y2 - y1 * x2) / sqrt(x1 * x1 + y1 * y1);
 }
 
@@ -69,12 +69,12 @@ double radToDegree(double rad) {
 }
 
 double find_alpha(const Point p1, const Point p2) {
-    double h1 = hypot(p1.x, p1.y);
-    double h2 = hypot(p2.x, p2.y);
-    double x1 = p1.x / h1;
-    double y1 = p1.y / h1;
-    double x2 = p2.x / h2;
-    double y2 = p2.y / h2;
+    const double h1 = hypot(p1.x, p1.y);
+    const double h2 = hypot(p2.x, p2.y);
+    const double x1 = p1.x / h1;
+    const double y1 = p1.y / h1;
+    const double x2 = p2.x / h2;
+    const double y2 = p2.y / h2;
     double angle = std::acos(x1 * x2 + y1 * y2);
 
     if (angle > std::numbers::pi / 2) {
@@ -84,14 +84,15 @@ double find_alpha(const Point p1, const Point p2) {
 }
 
 bool point_inside_polygon(const Point &point, const Polygon &polygon) {
-    int num_vertices = polygon.size();
-    double x = point.x, y = point.y;
+    const int num_vertices = polygon.size();
+    const double x = point.x;
+    const double y = point.y;
     bool inside = false;
 
-    Point p1 = polygon[0], p2;
+    Point p1 = polygon[0];
 
     for (int i = 1; i < num_vertices; i++) {
-        p2 = polygon[i];
+        const Point p2 = polygon[i];
 
         if (y > std::min(p1.y, p2.y)) {
             if (y <= std::max(p1.y, p2.y)) {
@@ -152,7 +153,7 @@ Point get_between_points(const Point &p1, const Point &p2, double w1, double w2)
     if (w2 == 0) {
         return p1;
     }
-    double s = w1 + w2;
+    const double s = w1 + w2;
     return {(p1.x * w1 + p2.x * w2) / s, (p1.y * w1 + p2.y * w2) / s};
 }
 
@@ -175,7 +176,7 @@ int segments_splice(const Point &p1, const Point &p2) {
 
 std::vector<Point> splice_segment(const Point &p1, const Point &p2) {
     std::vector<Point> points{ p1 };
-    int s = segments_splice(p1, p2);
+    const int s = segments_splice(p1, p2);
     for (int i = 1; i <= s; i++) {
         points.emplace_back(get_between_points(p1, p2, s - i, i));
     }
@@ -186,11 +187,11 @@ std::pair<Point, Point> get_close_points(const Point &p1_, const Point &p2_) {
     double dx = p2_.x - p1_.x;
     double dy = p2_.y - p1_.y;
     // norm
-    double base = hypot(dx, dy);
+    const double base = hypot(dx, dy);
     dx = dx / base;
     dy = dy / base;
-    Point p1 = {p1_.x + dx, p1_.y + dy};
-    Point p2 = {p2_.x - dx,  p2_.y - dy};
+    const Point p1 = {p1_.x + dx, p1_.y + dy};
+    const Point p2 = {p2_.x - dx,  p2_.y - dy};
     return std::make_pair(p1, p2);
 }
 
@@ -198,23 +199,23 @@ std::pair<Point, Point> get_distant_points(const Point &p1_, const Point &p2_) {
     double dx = p2_.x - p1_.x;
     double dy = p2_.y - p1_.y;
     // norm
-    double base = hypot(dx, dy);
+    const double base = hypot(dx, dy);
     dx = dx / base;
     dy = dy / base;
-    Point p1 = {p1_.x - dx, p1_.y - dy};
-    Point p2 = {p2_.x + dx,  p2_.y + dy};
+    const Point p1 = {p1_.x - dx, p1_.y - dy};
+    const Point p2 = {p2_.x + dx,  p2_.y + dy};
     return std::make_pair(p1, p2);
 }
 
 
 //https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
 double get_distance_from_segment(Point target, Point p1, Point p2) {
-    double a = target.x - p1.x;
-    double b = target.y - p1.y;
-    double c = p2.x - p1.x;
-    double d = p2.y - p1.y;
+    const double a = target.x - p1.x;
+    const double b = target.y - p1.y;
+    const double c = p2.x - p1.x;
+    const double d = p2.y - p1.y;
 
-    double lenSq = c * c + d * d;
+    const double lenSq = c * c + d * d;
 
     double param;
     if (lenSq != 0.0) {
@@ -235,8 +236,8 @@ double get_distance_from_segment(Point target, Point p1, Point p2) {
         xx = p1.x + param * c;
         yy = p1.y + param * d;
     }
-    double dx = target.x - xx;
-    double dy = target.y - yy;
+    const double dx = target.x - xx;
+    const double dy = target.y - yy;
     return hypot(dx, dy);
 }
 
